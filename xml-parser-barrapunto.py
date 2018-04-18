@@ -5,6 +5,7 @@ from xml.sax import make_parser
 import sys
 import string
 import os
+from urllib import request
 
 def normalize_whitespace(text):
     "Remove redundant whitespace from a string"
@@ -47,10 +48,9 @@ class CounterHandler(ContentHandler):
 
 # --- Main prog
 
-if len(sys.argv)<2:
-    print("Usage: python xml-parser-barrapunto.py <document>")
+if len(sys.argv)<1:
+    print("Usage: python xml-parser-barrapunto.py")
     print()
-    print(" <document>: file name of the document to parse")
     sys.exit(1)
 
 # Delete the file before appending
@@ -65,7 +65,7 @@ BarrapuntoHandler = CounterHandler()
 BarrapuntoParser.setContentHandler(BarrapuntoHandler)
 
 # Ready, set, go!
-xmlFile = open(sys.argv[1],"r")
+xmlFile = request.urlopen('http://barrapunto.com/index.rss')
 BarrapuntoParser.parse(xmlFile)
 
 print("Parse complete")
