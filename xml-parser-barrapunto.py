@@ -4,6 +4,7 @@ from xml.sax.handler import ContentHandler
 from xml.sax import make_parser
 import sys
 import string
+import os
 
 def normalize_whitespace(text):
     "Remove redundant whitespace from a string"
@@ -14,26 +15,28 @@ class CounterHandler(ContentHandler):
     def __init__ (self):
         self.inContent = 0
         self.theContent = ""
+        self.inItem = False
 
     def startElement (self, name, attrs):
         if name == 'item':
-            pass
-            #self.title = normalize_whitespace(attrs.get('title'))
-            #print(" item: " + self.title + ".")
-        elif name == 'title':
-            self.inContent = 1
-        elif name == 'link':
-            self.inContent = 1
+            self.inItem = True
+        elif self.inItem:
+            if name == 'title':
+                self.inContent = 1
+            elif name == 'link':
+                self.inContent = 1
 
     def endElement (self, name):
         if self.inContent:
             self.theContent = normalize_whitespace(self.theContent)
         if name == 'item':
-            print("")
-        elif name == 'title':
-            print("  title: " + self.theContent + ".")
-        elif name == 'link':
-            print("  link: " + self.theContent + ".")
+            self.inItem = False
+            print('</br>', file=open("barrapunto.html", "a"))
+        if self.inItem:
+            if name == 'title':
+                print(self.theContent, file=open("barrapunto.html", "a"))
+            elif name == 'link':
+                print('<a href="' + self.theContent + '">' + self.theContent + '</a>', file=open("barrapunto.html", "a"))
         if self.inContent:
             self.inContent = 0
             self.theContent = ""
@@ -45,19 +48,23 @@ class CounterHandler(ContentHandler):
 # --- Main prog
 
 if len(sys.argv)<2:
-    print("Usage: python xml-parser-jokes.py <document>")
+    print("Usage: python xml-parser-barrapunto.py <document>")
     print()
     print(" <document>: file name of the document to parse")
     sys.exit(1)
 
-# Load parser and driver
+# Delete the file before appending
+try:
+    os.remove('barrapunto.html')
+except OSError:
+    pass
 
+# Load parser and driver
 BarrapuntoParser = make_parser()
 BarrapuntoHandler = CounterHandler()
 BarrapuntoParser.setContentHandler(BarrapuntoHandler)
 
 # Ready, set, go!
-
 xmlFile = open(sys.argv[1],"r")
 BarrapuntoParser.parse(xmlFile)
 
